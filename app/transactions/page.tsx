@@ -11,32 +11,34 @@ import { History, Filter, Download, Trash2, CircleArrowDown as ArrowDownCircle, 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { calculateBoxBalance } from '@/lib/storage';
 
+const ALL_FILTER = '__all__';
+
 export default function TransactionsPage() {
   const { data, deleteTransaction } = useApp();
 
-  const [branchFilter, setBranchFilter] = useState('');
-  const [bankFilter, setBankFilter] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [currencyFilter, setCurrencyFilter] = useState('');
-  const [typeFilter, setTypeFilter] = useState('');
+  const [branchFilter, setBranchFilter] = useState(ALL_FILTER);
+  const [bankFilter, setBankFilter] = useState(ALL_FILTER);
+  const [categoryFilter, setCategoryFilter] = useState(ALL_FILTER);
+  const [currencyFilter, setCurrencyFilter] = useState(ALL_FILTER);
+  const [typeFilter, setTypeFilter] = useState(ALL_FILTER);
   const [searchFilter, setSearchFilter] = useState('');
 
   const filteredTransactions = useMemo(() => {
     let filtered = [...data.transactions];
 
-    if (branchFilter) {
+    if (branchFilter !== ALL_FILTER) {
       filtered = filtered.filter(t => t.branchId === branchFilter);
     }
-    if (bankFilter) {
+    if (bankFilter !== ALL_FILTER) {
       filtered = filtered.filter(t => t.bankId === bankFilter);
     }
-    if (categoryFilter) {
+    if (categoryFilter !== ALL_FILTER) {
       filtered = filtered.filter(t => t.categoryId === categoryFilter);
     }
-    if (currencyFilter) {
+    if (currencyFilter !== ALL_FILTER) {
       filtered = filtered.filter(t => t.currency === currencyFilter);
     }
-    if (typeFilter) {
+    if (typeFilter !== ALL_FILTER) {
       filtered = filtered.filter(t => t.type === typeFilter);
     }
     if (searchFilter) {
@@ -63,15 +65,21 @@ export default function TransactionsPage() {
   }, [filteredTransactions, data.transactions]);
 
   const clearFilters = () => {
-    setBranchFilter('');
-    setBankFilter('');
-    setCategoryFilter('');
-    setCurrencyFilter('');
-    setTypeFilter('');
+    setBranchFilter(ALL_FILTER);
+    setBankFilter(ALL_FILTER);
+    setCategoryFilter(ALL_FILTER);
+    setCurrencyFilter(ALL_FILTER);
+    setTypeFilter(ALL_FILTER);
     setSearchFilter('');
   };
 
-  const hasActiveFilters = branchFilter || bankFilter || categoryFilter || currencyFilter || typeFilter || searchFilter;
+  const hasActiveFilters =
+    branchFilter !== ALL_FILTER ||
+    bankFilter !== ALL_FILTER ||
+    categoryFilter !== ALL_FILTER ||
+    currencyFilter !== ALL_FILTER ||
+    typeFilter !== ALL_FILTER ||
+    !!searchFilter;
 
   const exportToCSV = () => {
     const headers = ['Date', 'Branch', 'Bank', 'Category', 'Currency', 'Type', 'Amount', 'Balance', 'Note'];
@@ -137,7 +145,7 @@ export default function TransactionsPage() {
                   <SelectValue placeholder="All branches" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All branches</SelectItem>
+                  <SelectItem value={ALL_FILTER}>All branches</SelectItem>
                   {data.branches.map((branch) => (
                     <SelectItem key={branch.id} value={branch.id}>
                       {branch.name}
@@ -154,7 +162,7 @@ export default function TransactionsPage() {
                   <SelectValue placeholder="All banks" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All banks</SelectItem>
+                  <SelectItem value={ALL_FILTER}>All banks</SelectItem>
                   {data.banks.map((bank) => (
                     <SelectItem key={bank.id} value={bank.id}>
                       {bank.name}
@@ -171,7 +179,7 @@ export default function TransactionsPage() {
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
+                  <SelectItem value={ALL_FILTER}>All categories</SelectItem>
                   {data.categories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
@@ -188,7 +196,7 @@ export default function TransactionsPage() {
                   <SelectValue placeholder="All currencies" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All currencies</SelectItem>
+                  <SelectItem value={ALL_FILTER}>All currencies</SelectItem>
                   <SelectItem value="USD">USD</SelectItem>
                   <SelectItem value="IQD">IQD</SelectItem>
                 </SelectContent>
@@ -202,7 +210,7 @@ export default function TransactionsPage() {
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value={ALL_FILTER}>All types</SelectItem>
                   <SelectItem value="IN">Money In</SelectItem>
                   <SelectItem value="OUT">Money Out</SelectItem>
                 </SelectContent>
