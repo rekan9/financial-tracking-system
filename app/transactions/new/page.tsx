@@ -22,6 +22,7 @@ export default function NewTransactionPage() {
   const [type, setType] = useState<TransactionType>('IN');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
+  const [formError, setFormError] = useState('');
 
   const availableBanks = useMemo(() => {
     return data.banks.filter(b => b.branchId === branchId);
@@ -37,6 +38,7 @@ export default function NewTransactionPage() {
   }, [data.categories, categoryId]);
 
   const handleBranchChange = (value: string) => {
+    setFormError('');
     setBranchId(value);
     setBankId('');
     setCategoryId('');
@@ -44,24 +46,48 @@ export default function NewTransactionPage() {
   };
 
   const handleCategoryChange = (value: string) => {
+    setFormError('');
     setCategoryId(value);
     setCurrency('');
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (branchId && bankId && categoryId && currency && amount) {
-      addTransaction({
-        branchId,
-        bankId,
-        categoryId,
-        currency,
-        type,
-        amount: parseFloat(amount),
-        note: note.trim() || undefined,
-      });
-      router.push('/transactions');
+
+    if (!branchId) {
+      setFormError('Please select a branch.');
+      return;
     }
+    if (!bankId) {
+      setFormError('Please select a bank.');
+      return;
+    }
+    if (!categoryId) {
+      setFormError('Please select a category.');
+      return;
+    }
+    if (!currency) {
+      setFormError('Please select a currency.');
+      return;
+    }
+
+    const parsedAmount = Number(amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setFormError('Please enter a valid amount greater than 0.');
+      return;
+    }
+
+    setFormError('');
+    addTransaction({
+      branchId,
+      bankId,
+      categoryId,
+      currency,
+      type,
+      amount: parsedAmount,
+      note: note.trim() || undefined,
+    });
+    router.push('/transactions');
   };
 
   if (data.branches.length === 0) {
@@ -100,7 +126,7 @@ export default function NewTransactionPage() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="text-sm font-medium text-slate-700">Branch</label>
-                <Select value={branchId} onValueChange={handleBranchChange} required>
+                <Select value={branchId} onValueChange={handleBranchChange}>
                   <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder="Select a branch" />
                   </SelectTrigger>
@@ -116,7 +142,14 @@ export default function NewTransactionPage() {
 
               <div>
                 <label className="text-sm font-medium text-slate-700">Bank</label>
-                <Select value={bankId} onValueChange={setBankId} disabled={!branchId} required>
+                <Select
+                  value={bankId}
+                  onValueChange={(value) => {
+                    setFormError('');
+                    setBankId(value);
+                  }}
+                  disabled={!branchId}
+                >
                   <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder={branchId ? 'Select a bank' : 'Select branch first'} />
                   </SelectTrigger>
@@ -136,7 +169,7 @@ export default function NewTransactionPage() {
 
               <div>
                 <label className="text-sm font-medium text-slate-700">Category</label>
-                <Select value={categoryId} onValueChange={handleCategoryChange} disabled={!branchId} required>
+                <Select value={categoryId} onValueChange={handleCategoryChange} disabled={!branchId}>
                   <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder={branchId ? 'Select a category' : 'Select branch first'} />
                   </SelectTrigger>
@@ -156,7 +189,14 @@ export default function NewTransactionPage() {
 
               <div>
                 <label className="text-sm font-medium text-slate-700">Currency</label>
-                <Select value={currency} onValueChange={(value) => setCurrency(value as Currency)} disabled={!categoryId} required>
+                <Select
+                  value={currency}
+                  onValueChange={(value) => {
+                    setFormError('');
+                    setCurrency(value as Currency);
+                  }}
+                  disabled={!categoryId}
+                >
                   <SelectTrigger className="mt-1.5">
                     <SelectValue placeholder={categoryId ? 'Select currency' : 'Select category first'} />
                   </SelectTrigger>
@@ -211,10 +251,12 @@ export default function NewTransactionPage() {
                   step="0.01"
                   min="0"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    setFormError('');
+                    setAmount(e.target.value);
+                  }}
                   placeholder="0.00"
                   className="mt-1.5"
-                  required
                 />
               </div>
 
@@ -222,12 +264,21 @@ export default function NewTransactionPage() {
                 <label className="text-sm font-medium text-slate-700">Note (Optional)</label>
                 <Textarea
                   value={note}
-                  onChange={(e) => setNote(e.target.value)}
+                  onChange={(e) => {
+                    setFormError('');
+                    setNote(e.target.value);
+                  }}
                   placeholder="Add any additional notes or reference number"
                   className="mt-1.5"
                   rows={3}
                 />
               </div>
+
+              {formError && (
+                <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {formError}
+                </p>
+              )}
 
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => router.back()}>
